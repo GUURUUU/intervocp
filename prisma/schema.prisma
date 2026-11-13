@@ -1,0 +1,327 @@
+// Prisma schema for IntervOCP — intervention management for the IT service
+// of Groupe OCP (Khouribga site).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Users, skills & availability
+// ---------------------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  DISPATCHER
+  TECHNICIAN
+  CLIENT
+  MANAGER
+}
+
+enum AvailabilityType {
+  WORK
+  LEAVE
+  BUSY
+}
+
+model User {
+  id           String         @id @default(cuid())
+  name         String
+  email        String         @unique
+  passwordHash String
+  role         Role
+  phone        String?
+  active       Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  // Relations
+  technicianSkills    TechnicianSkill[]
+  availability        Availability[]
+  requestedRequests   Intervention[]    @relation("Requester")
+  assignedAssignments Assignment[]      @relation("Technician")
+  assignedByMe        Assignment[]      @relation("Assigner")
+  statusChanges       StatusHistory[]
+  comments            Comment[]
+  attachments         Attachment[]
+  locationPings       LocationPing[]
+  notifications       Notification[]
+  partUsages          PartUsage[]
+}
+
+model Skill {
+  id   String @id @default(cuid())
+  name String @unique
+
+  technicianSkills TechnicianSkill[]
+  interventions    Intervention[]    @relation("RequiredSkill")
+}
+
+/// Join table: technician mastery of a skill, 1-5 level.
+model TechnicianSkill {
+  id           String @id @default(cuid())
+  technicianId String
+  skillId      String
+  level        Int // 1..5
+
+  technician User  @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  skill      Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([technicianId, skillId])
+}
+
+model Availability {
+  id           String           @id @default(cuid())
+  technicianId String
+  start        DateTime
+  end          DateTime
+  type         AvailabilityType @default(WORK)
+
+  technician User @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+
+  @@index([technicianId, start, end])
+}
+
+// ---------------------------------------------------------------------------
+// Equipment & interventions
+// ---------------------------------------------------------------------------
+
+model Equipment {
+  id           String @id @default(cuid())
+  name         String
+  location     String
+  category     String
+  serialNumber String @unique
+  createdAt    DateTime @default(now())
+
+  interventions Intervention[]
+}
+
+enum InterventionType {
+  CORRECTIVE
+  PREVENTIVE
+  URGENT
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum Status {
+  NOUVELLE
+  PLANIFIEE
+  EN_COURS
+  EN_ATTENTE_PIECES
+  TERMINEE
+  CLOTUREE
+  ANNULEE
+}
+
+model Intervention {
+  id                  String           @id @default(cuid())
+  reference           String           @unique // e.g. INT-2025-0001
+  title               String
+  description         String
+  type                InterventionType @default(CORRECTIVE)
+  priority            Priority         @default(MEDIUM)
+  status              Status           @default(NOUVELLE)
+
+  requesterId String
+  equipmentId String?
+  // Free text location (used when no equipment record exists, e.g. a room).
+  locationText String?
+  latitude     Float?
+  longitude    Float?
+
+  requiredSkillId String?
+  plannedStart    DateTime?
+  plannedEnd      DateTime?
+  actualStart     DateTime?
+  actualEnd       DateTime?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  closedAt            DateTime?
+  satisfactionRating  Int?      // 1..5, set by the client at closing
+  satisfactionComment String?
+
+  // Relations
+  requester   User      @relation("Requester", fields: [requesterId], references: [id])
+  equipment   Equipment? @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  requiredSkill Skill?   @relation("RequiredSkill", fields: [requiredSkillId], references: [id])
+
+  assignments   Assignment[]
+  statusHistory StatusHistory[]
+  comments      Comment[]
+  attachments   Attachment[]
+  incidents     Incident[]
+  partUsages    PartUsage[]
+  reports       Report[]
+
+  @@index([status])
+  @@index([requesterId])
+  @@index([reference])
+}
+
+model Assignment {
+  id             String   @id @default(cuid())
+  interventionId String
+  technicianId   String
+  assignedBy     String
+  assignedAt     DateTime @default(now())
+
+  intervention Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  technician   User         @relation("Technician", fields: [technicianId], references: [id])
+  assigner     User         @relation("Assigner", fields: [assignedBy], references: [id])
+
+  @@index([technicianId])
+  @@index([interventionId])
+}
+
+model StatusHistory {
+  id             String   @id @default(cuid())
+  interventionId String
+  fromStatus     Status?
+  toStatus       Status
+  changedBy      String
+  changedAt      DateTime @default(now())
+  comment        String?
+
+  intervention Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  changedByUser User        @relation(fields: [changedBy], references: [id])
+
+  @@index([interventionId])
+}
+
+model Comment {
+  id             String   @id @default(cuid())
+  interventionId String
+  authorId       String
+  message        String
+  createdAt      DateTime @default(now())
+
+  intervention Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  author       User         @relation(fields: [authorId], references: [id])
+
+  @@index([interventionId])
+}
+
+enum AttachmentKind {
+  PHOTO
+  DOCUMENT
+}
+
+model Attachment {
+  id             String         @id @default(cuid())
+  interventionId String
+  uploadedBy     String
+  filePath       String
+  kind           AttachmentKind @default(PHOTO)
+  fileName       String
+  createdAt      DateTime       @default(now())
+
+  intervention Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  uploadedByUser User        @relation(fields: [uploadedBy], references: [id])
+
+  @@index([interventionId])
+}
+
+model Incident {
+  id             String   @id @default(cuid())
+  interventionId String
+  description    String
+  severity       String // LOW | MEDIUM | HIGH
+  reportedAt     DateTime @default(now())
+
+  intervention Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// Stock
+// ---------------------------------------------------------------------------
+
+model Part {
+  id           String  @id @default(cuid())
+  reference    String  @unique
+  name         String
+  quantity     Int     @default(0)
+  minThreshold Int     @default(5)
+  unitCost     Float   @default(0)
+  location     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  usages    PartUsage[]
+  movements StockMovement[]
+}
+
+model PartUsage {
+  id             String   @id @default(cuid())
+  interventionId String
+  partId         String
+  quantity       Int
+  usedBy         String
+  usedAt         DateTime @default(now())
+
+  intervention Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  part         Part         @relation(fields: [partId], references: [id])
+  user         User         @relation(fields: [usedBy], references: [id])
+
+  @@index([interventionId])
+}
+
+model StockMovement {
+  id        String   @id @default(cuid())
+  partId    String
+  delta     Int // negative = stock out, positive = stock in
+  reason    String // e.g. "USAGE", "RESTOCK", "ADJUSTMENT", "SEED"
+  createdAt DateTime @default(now())
+
+  part Part @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@index([partId])
+}
+
+// ---------------------------------------------------------------------------
+// Real-time & notifications
+// ---------------------------------------------------------------------------
+
+model LocationPing {
+  id           String   @id @default(cuid())
+  technicianId String
+  latitude     Float
+  longitude    Float
+  timestamp    DateTime @default(now())
+
+  technician User @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+
+  @@index([technicianId, timestamp])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+}
+
+model Report {
+  id             String   @id @default(cuid())
+  interventionId String
+  generatedAt    DateTime @default(now())
+  filePath       String
+
+  intervention Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+}
