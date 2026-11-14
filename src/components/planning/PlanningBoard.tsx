@@ -10,6 +10,7 @@ import {
 import type { Status, Priority, InterventionType } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import SuggestDialog from "@/components/planning/SuggestDialog";
+import { useEventStream } from "@/hooks/use-event-stream";
 import {
   STATUS_BADGE_CLASS,
   PRIORITY_BADGE_CLASS,
@@ -95,6 +96,16 @@ export default function PlanningBoard({ role }: { role: string }) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Live refresh through SSE (assignments and status changes).
+  useEventStream(
+    useCallback(
+      (event) => {
+        if (event.type.startsWith("intervention.")) void load();
+      },
+      [load]
+    )
+  );
 
   const days = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),

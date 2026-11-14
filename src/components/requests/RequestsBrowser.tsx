@@ -30,6 +30,7 @@ import {
 } from "@/lib/format";
 import CreateRequestDialog from "./CreateRequestDialog";
 import type { Role } from "@prisma/client";
+import { useEventStream } from "@/hooks/use-event-stream";
 
 export interface RequestListItem {
   id: string;
@@ -94,6 +95,16 @@ export default function RequestsBrowser({ role }: RequestsBrowserProps) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Live refresh through SSE (any intervention change).
+  useEventStream(
+    useCallback(
+      (event) => {
+        if (event.type.startsWith("intervention.")) void load();
+      },
+      [load]
+    )
+  );
 
   const canCreate = role !== "MANAGER";
 
