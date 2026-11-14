@@ -45,7 +45,7 @@ export default function LiquidMetalLogo({
       ctx.clearRect(0, 0, width, height);
 
       // White glyph on transparent background (what the shader treats as metal)
-      ctx.font = `800 46px var(--font-sans, Arial, sans-serif)`;
+      ctx.font = `800 56px var(--font-sans, Arial, sans-serif)`;
       ctx.fillStyle = "#ffffff";
       ctx.textBaseline = "middle";
       ctx.textAlign = "center";
@@ -74,14 +74,17 @@ export default function LiquidMetalLogo({
       image={imageUrl}
       className={className}
       style={{ width, height }}
+      fit="contain"
+      scale={1.9}
       colorBack="#00000000"
-      distortion={0.4}
-      softness={0.35}
-      speed={0.9}
-      contour={0.3}
+      colorTint="#7dd3b0"
+      distortion={0.45}
+      softness={0.3}
+      speed={0.8}
+      contour={0.35}
       angle={45}
-      shiftRed={0.1}
-      shiftBlue={0.1}
+      shiftRed={0.08}
+      shiftBlue={0.08}
     />
   );
 }

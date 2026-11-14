@@ -5,7 +5,6 @@ import { Bell, BellRing } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -78,7 +77,7 @@ export default function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative text-white/80 hover:text-white"
+          className="relative text-foreground/80 hover:text-foreground"
           aria-label={`Notifications (${unread} non lues)`}
         >
           {unread > 0 ? <BellRing className="h-5 w-5" /> : <Bell className="h-5 w-5" />}
@@ -89,14 +88,14 @@ export default function NotificationBell() {
           ) : null}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 border-white/10 bg-[#151b1d]/95 backdrop-blur-xl">
+      <DropdownMenuContent align="end" className="w-80 border-border bg-popover/95 backdrop-blur-xl">
         <div className="flex items-center justify-between px-3 py-2">
-          <span className="text-sm font-semibold text-white">Notifications</span>
+          <span className="text-sm font-semibold text-foreground">Notifications</span>
           {unread > 0 ? (
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-xs text-emerald-300 hover:text-emerald-200"
+              className="h-7 text-xs text-emerald-700 hover:text-emerald-800"
               onClick={markAllRead}
             >
               Tout marquer lu
@@ -105,7 +104,7 @@ export default function NotificationBell() {
         </div>
         <ScrollArea className="h-72">
           {items.length === 0 ? (
-            <p className="px-3 py-8 text-center text-sm text-white/50">
+            <p className="px-3 py-8 text-center text-sm text-muted-foreground">
               Aucune notification
             </p>
           ) : (
@@ -114,11 +113,11 @@ export default function NotificationBell() {
                 <li
                   key={item.id}
                   className={`rounded-lg px-3 py-2 text-sm ${
-                    item.read ? "text-white/50" : "bg-emerald-500/10 text-white"
+                    item.read ? "text-muted-foreground" : "bg-emerald-500/10 text-foreground"
                   }`}
                 >
                   <p>{item.message}</p>
-                  <p className="mt-0.5 text-[11px] text-white/40">
+                  <p className="mt-0.5 text-[11px] text-muted-foreground/70">
                     {formatDateTime(item.createdAt)}
                   </p>
                 </li>

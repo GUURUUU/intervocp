@@ -11,15 +11,15 @@ export const STATUS_LABELS: Record<Status, string> = {
   ANNULEE: "Annulée",
 };
 
-/** Tailwind badge classes per status. */
+/** Tailwind badge classes per status (light theme). */
 export const STATUS_BADGE_CLASS: Record<Status, string> = {
-  NOUVELLE: "bg-sky-500/15 text-sky-300 border-sky-500/30",
-  PLANIFIEE: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-  EN_COURS: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-  EN_ATTENTE_PIECES: "bg-orange-500/15 text-orange-300 border-orange-500/30",
-  TERMINEE: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
-  CLOTUREE: "bg-emerald-600/15 text-emerald-400 border-emerald-600/30",
-  ANNULEE: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+  NOUVELLE: "bg-sky-100 text-sky-800 border-sky-200",
+  PLANIFIEE: "bg-amber-100 text-amber-800 border-amber-200",
+  EN_COURS: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  EN_ATTENTE_PIECES: "bg-orange-100 text-orange-800 border-orange-200",
+  TERMINEE: "bg-indigo-100 text-indigo-800 border-indigo-200",
+  CLOTUREE: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  ANNULEE: "bg-rose-100 text-rose-800 border-rose-200",
 };
 
 export const TYPE_LABELS: Record<InterventionType, string> = {
@@ -36,10 +36,10 @@ export const PRIORITY_LABELS: Record<Priority, string> = {
 };
 
 export const PRIORITY_BADGE_CLASS: Record<Priority, string> = {
-  LOW: "bg-slate-500/15 text-slate-300 border-slate-500/30",
-  MEDIUM: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",
-  HIGH: "bg-orange-500/15 text-orange-300 border-orange-500/30",
-  CRITICAL: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+  LOW: "bg-slate-100 text-slate-700 border-slate-200",
+  MEDIUM: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  HIGH: "bg-orange-100 text-orange-800 border-orange-200",
+  CRITICAL: "bg-rose-100 text-rose-800 border-rose-200",
 };
 
 export const ROLE_LABELS: Record<Role, string> = {

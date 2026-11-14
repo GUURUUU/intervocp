@@ -27,8 +27,8 @@ export function jsonError(
  * JSON responses, logs and masks unexpected errors.
  */
 export async function handleRoute(
-  fn: () => Promise<NextResponse>
-): Promise<NextResponse> {
+  fn: () => Promise<Response>
+): Promise<Response> {
   try {
     return await fn();
   } catch (error) {

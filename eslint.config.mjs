@@ -12,7 +12,22 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
-    ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "coverage/**", "playwright-report/**", "test-results/**", "docs/screenshots/**"],
+    ignores: [
+      "node_modules/**",
+      ".next/**",
+      "out/**",
+      "build/**",
+      "coverage/**",
+      "playwright-report/**",
+      "test-results/**",
+      "docs/screenshots/**",
+      // Next.js generated file
+      "next-env.d.ts",
+      // Vendored third-party library (dashersw/liquid-glass-js)
+      "src/lib/liquid-glass/glass-core.js",
+      // Data seeding script (console logging is intentional there)
+      "prisma/seed.ts",
+    ],
   },
   {
     rules: {

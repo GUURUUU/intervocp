@@ -20,9 +20,9 @@ export default function SidebarNav({ role, userName }: SidebarNavProps) {
 
   return (
     <aside className="glass-panel fixed inset-y-0 left-0 z-50 hidden w-64 flex-col rounded-none border-y-0 border-l-0 lg:flex">
-      <div className="flex h-16 items-center gap-2 border-b border-white/10 px-4">
-        <Wrench className="h-5 w-5 text-emerald-400" aria-hidden="true" />
-        <span className="text-base font-bold text-white">IntervOCP</span>
+      <div className="flex h-16 items-center gap-2 border-b border-border px-4">
+        <Wrench className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+        <span className="text-base font-bold text-foreground">IntervOCP</span>
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Navigation principale">
@@ -36,8 +36,8 @@ export default function SidebarNav({ role, userName }: SidebarNavProps) {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "bg-emerald-500/15 text-emerald-300"
-                  : "text-white/70 hover:bg-white/5 hover:text-white"
+                  ? "bg-emerald-500/10 text-emerald-700"
+                  : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
               )}
               aria-current={active ? "page" : undefined}
             >
@@ -48,10 +48,10 @@ export default function SidebarNav({ role, userName }: SidebarNavProps) {
         })}
       </nav>
 
-      <div className="border-t border-white/10 p-3">
+      <div className="border-t border-border p-3">
         <div className="glass-panel-soft rounded-lg px-3 py-2">
-          <p className="truncate text-sm font-medium text-white">{userName}</p>
-          <p className="text-xs text-emerald-300/80">{ROLE_LABELS[role]}</p>
+          <p className="truncate text-sm font-medium text-foreground">{userName}</p>
+          <p className="text-xs text-emerald-700">{ROLE_LABELS[role]}</p>
         </div>
       </div>
     </aside>

@@ -10,10 +10,10 @@ export default async function DashboardPage() {
       {/* Header with 3D equipment icon */}
       <div className="brand-gradient glass-panel flex items-center justify-between rounded-2xl p-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             Bonjour {session?.user?.name ?? ""}
           </h1>
-          <p className="text-sm text-white/60">
+          <p className="text-sm text-muted-foreground">
             {session ? ROLE_LABELS[session.user.role] : ""} — Service IT, site de
             Khouribga
           </p>

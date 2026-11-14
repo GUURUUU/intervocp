@@ -44,3 +44,5 @@ next-env.d.ts
 
 # reports generated at runtime
 /public/reports
+
+lint-report.json
