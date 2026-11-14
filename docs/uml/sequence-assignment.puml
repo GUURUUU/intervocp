@@ -1,0 +1,37 @@
+@startuml
+skinparam shadowing false
+title Séquence — Suggestion puis affectation d'un technicien
+
+actor Répartiteur as D
+participant "RequestDetail\n(SuggestDialog)" as UI
+participant "POST /api/planning/suggest" as API
+participant "planning.ts\n(suggestTechnicians)" as Svc
+participant "PostgreSQL\n(Prisma)" as DB
+
+D -> UI : ouvre « Affecter / suggérer »
+UI -> API : GET ?plannedStart&plannedEnd
+API -> Svc : suggestTechnicians(id, slot)
+Svc -> DB : intervention + skills +\navailabilités + affectations +\ndernière position GPS
+DB --> Svc : données brutes
+
+loop pour chaque technicien actif
+  Svc -> Svc : score = 0.40·skill + 0.25·dispo\n+ 0.20·charge + 0.15·distance
+  Svc -> Svc : ineligible si congé ou double-réservation
+end
+Svc --> API : classement (éligibles d'abord)
+API --> UI : Suggestion[] avec breakdown
+UI --> D : liste scorée + raisons
+
+D -> UI : choisit un technicien + créneau
+UI -> API : POST /api/planning/assign
+API -> Svc : assignTechnician(...)
+Svc -> DB : vérif double-réservation\ndans une transaction
+alt créneau libre
+  Svc -> DB : create Assignment +\nupdate plannedStart/End + PLANIFIEE
+  Svc -> Svc : publish("intervention.assigned") + notification
+  API --> UI : 200 OK
+  UI --> D : fiche mise à jour (SSE)
+else créneau occupé
+  API --> UI : 409 "Créneau déjà occupé"
+end
+@enduml

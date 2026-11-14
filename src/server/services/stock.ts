@@ -37,8 +37,8 @@ export async function listParts(
       ...(options.search
         ? {
             OR: [
-              { name: { contains: options.search } },
-              { reference: { contains: options.search } },
+              { name: { contains: options.search, mode: "insensitive" } },
+              { reference: { contains: options.search, mode: "insensitive" } },
             ],
           }
         : {}),

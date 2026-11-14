@@ -1,0 +1,26 @@
+@startuml
+skinparam shadowing false
+title Séquence — Changement de statut et diffusion temps réel
+
+actor Utilisateur as U
+participant "RequestDetail" as UI
+participant "PUT /api/requests/:id" as API
+participant "requests.ts\n(updateStatus)" as Svc
+participant "EventBus\n(publish)" as Bus
+participant "GET /api/stream\n(SSE)" as SSE
+participant "Autres clients\nconnectés" as Others
+
+U -> UI : choisit un statut + commentaire
+UI -> API : PUT { toStatus }
+API -> Svc : updateStatus(user, id, toStatus)
+Svc -> Svc : canTransition(from, to) ?
+alt transition autorisée
+  Svc -> DB : transaction\n(historique + statut)
+  Svc -> Bus : publish("intervention.status", {id, toStatus})
+  Bus -> SSE : event ciblé (rôles concernés)
+  SSE --> Others : refresh automatique
+  API --> UI : 200 (fiche à jour)
+else transition interdite
+  API --> UI : 409 "Transition de statut non autorisée"
+end
+@enduml

@@ -1,0 +1,33 @@
+@startuml
+skinparam shadowing false
+title Cycle de vie d'une demande d'intervention
+
+state "NOUVELLE" as S1
+state "PLANIFIEE" as S2
+state "EN_COURS" as S3
+state "EN_ATTENTE_PIECES" as S4
+state "TERMINEE" as S5
+state "CLOTUREE" as S6
+state "ANNULEE" as S7
+
+S1 : répartiteur planifie
+S2 : créneau + technicien affectés
+S3 : démarrage réel (décompte)
+S4 : pièces manquantes
+S5 : travaux finis
+S6 : évaluation client possible
+
+[*] --> S1
+S1 --> S2 : planification
+S2 --> S3 : démarrage
+S3 --> S4 : pièce manquante
+S4 --> S3 : pièce disponible
+S3 --> S5 : fin des travaux
+S5 --> S6 : clôture + évaluation
+S1 --> S7 : annulation
+S2 --> S7 : annulation
+S3 --> S7 : annulation
+S4 --> S7 : annulation
+S6 --> [*]
+S7 --> [*]
+@enduml

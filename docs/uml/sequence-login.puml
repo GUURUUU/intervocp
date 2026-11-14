@@ -1,0 +1,27 @@
+@startuml
+skinparam shadowing false
+title Séquence — Connexion et ouverture de session
+
+actor Utilisateur as U
+participant "LoginForm" as F
+participant "loginAction\n(Server Action)" as A
+participant "Auth.js\n(credentials)" as Auth
+participant "Prisma" as DB
+
+U -> F : saisit email + mot de passe
+F -> A : submit (FormData)
+A -> Auth : signIn("credentials", ...)
+Auth -> DB : user.findUnique(email)
+DB --> Auth : user (passwordHash)
+Auth -> Auth : bcrypt.compare(password, hash)
+alt identifiants valides
+  Auth -> Auth : création JWT (session)
+  Auth --> A : session OK
+  A --> F : redirect("/dashboard")
+  F --> U : page dashboard (rôle appliqué)
+else identifiants invalides
+  Auth --> A : erreur
+  A --> F : state.error = "Email ou mot de passe incorrect."
+  F --> U : message d'erreur affiché
+end
+@enduml

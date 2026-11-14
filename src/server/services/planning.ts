@@ -5,6 +5,16 @@ import { notifyUsers } from "@/lib/notifications";
 import { ApiError } from "@/lib/api-helpers";
 import type { Prisma, Status } from "@prisma/client";
 import type { User } from "@prisma/client";
+import {
+  ACTIVE_STATUSES,
+  availabilityScore,
+  distanceScore,
+  overlaps,
+  skillScore,
+  totalScore,
+  workloadScore,
+  type SuggestionBreakdown,
+} from "./suggestion-scoring";
 
 // ---------------------------------------------------------------------------
 // Technician suggestion algorithm
@@ -15,26 +25,9 @@ import type { User } from "@prisma/client";
 //   (c) current workload   — fewer active jobs = higher score (weight 0.20)
 //   (d) distance           — proximity of the latest location ping (weight 0.15)
 //
-// The full breakdown is returned so the Dispatcher can see WHY each
-// technician was ranked where they are.
+// The scoring components live in `suggestion-scoring.ts` (pure, unit-tested);
+// this module fetches the data and assembles the ranking.
 // ---------------------------------------------------------------------------
-
-const WEIGHTS = {
-  skill: 0.4,
-  availability: 0.25,
-  workload: 0.2,
-  distance: 0.15,
-} as const;
-
-/** Active statuses count as occupied for workload / double-booking. */
-const ACTIVE_STATUSES: Status[] = ["PLANIFIEE", "EN_COURS", "EN_ATTENTE_PIECES"];
-
-export interface SuggestionBreakdown {
-  skillMatch: number;
-  availability: number;
-  workload: number;
-  distance: number;
-}
 
 export interface Suggestion {
   technicianId: string;
@@ -49,78 +42,6 @@ export interface Suggestion {
   distanceKm: number | null;
   skillLevel: number | null;
   activeJobs: number;
-}
-
-interface AvailabilityWindow {
-  start: Date;
-  end: Date;
-  type: "WORK" | "LEAVE" | "BUSY";
-}
-
-/** Overlap test for two date ranges (inclusive of touching bounds). */
-function overlaps(
-  aStart: Date,
-  aEnd: Date,
-  bStart: Date,
-  bEnd: Date
-): boolean {
-  return aStart < bEnd && bStart < aEnd;
-}
-
-/** Normalizes a skill level 1..5 into 0..1 (level 1 → 0.2, level 5 → 1.0). */
-function skillScore(level: number | null): number {
-  if (!level) return 0;
-  return level / 5;
-}
-
-/**
- * Availability component:
- *   1.0 — a WORK block fully covers the slot and no LEAVE/BUSY overlaps it
- *   0.0 — a LEAVE/BUSY block overlaps the slot
- *   0.5 — no availability data for that day (unknown)
- */
-function availabilityScore(
-  slotStart: Date,
-  slotEnd: Date,
-  windows: AvailabilityWindow[]
-): { score: number; blocked: boolean } {
-  const covering = windows.filter(
-    (w) =>
-      w.type === "WORK" &&
-      w.start <= slotStart &&
-      w.end >= slotEnd
-  );
-  const blocking = windows.filter(
-    (w) => w.type !== "WORK" && overlaps(slotStart, slotEnd, w.start, w.end)
-  );
-
-  if (blocking.length > 0) return { score: 0, blocked: true };
-  if (covering.length > 0) return { score: 1, blocked: false };
-
-  const anyThatDay = windows.length > 0;
-  return { score: anyThatDay ? 0 : 0.5, blocked: false };
-}
-
-/**
- * Workload component (inverse): fewer concurrent/active jobs → closer to 1.
- * `activeOverlaps` counts active interventions whose planned window overlaps
- * the slot (double-booking risk), `weekLoad` counts all active jobs in the
- * slot's calendar week.
- */
-function workloadScore(activeOverlaps: number, weekLoad: number): number {
-  const raw = 1 - Math.min(1, activeOverlaps * 0.5 + weekLoad * 0.1);
-  return Math.max(0, raw);
-}
-
-/**
- * Distance component: 2 km or less → 1.0; 20 km or more → 0.0;
- * linear in between. Unknown distance (no ping / no coords) → 0.5.
- */
-function distanceScore(distanceKm: number | null): number {
-  if (distanceKm === null) return 0.5;
-  if (distanceKm <= 2) return 1;
-  if (distanceKm >= 20) return 0;
-  return 1 - (distanceKm - 2) / 18;
 }
 
 /** Rank all active technicians for the given intervention + slot. */
@@ -265,17 +186,11 @@ export async function suggestTechnicians(
       distance: distanceMatch,
     };
 
-    const totalScore =
-      WEIGHTS.skill * skillMatch +
-      WEIGHTS.availability * availabilityMatch +
-      WEIGHTS.workload * workloadMatch +
-      WEIGHTS.distance * distanceMatch;
-
     suggestions.push({
       technicianId: tech.id,
       name: tech.name,
       email: tech.email,
-      totalScore: Math.round(totalScore * 100) / 100,
+      totalScore: totalScore(breakdown),
       ineligible,
       reasons,
       breakdown,

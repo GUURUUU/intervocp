@@ -1,0 +1,60 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "Client\n(service demandeur)" as Client
+actor "Technicien" as Tech
+actor "Répartiteur\n(Dispatcher)" as Disp
+actor "Responsable\n(Manager)" as Manager
+actor "Administrateur" as Admin
+
+rectangle "IntervOCP" {
+  usecase "Se connecter" as UC0
+  usecase "Créer une demande\nd'intervention" as UC1
+  usecase "Suivre ses demandes" as UC2
+  usecase "Évaluer une intervention\nclôturée" as UC3
+  usecase "Consulter le catalogue\nde demandes" as UC4
+  usecase "Changer le statut\nd'une intervention" as UC5
+  usecase "Consulter le planning\nhebdomadaire" as UC6
+  usecase "Suggérer / affecter\nun technicien" as UC7
+  usecase "Consulter les positions\nGPS temps réel" as UC8
+  usecase "Partager sa position" as UC9
+  usecase "Déclarer une pièce\nutilisée" as UC10
+  usecase "Signaler un incident" as UC11
+  usecase "Gérer le stock\n(créer / réapprovisionner)" as UC12
+  usecase "Consulter les KPIs\net rapports" as UC13
+  usecase "Exporter les interventions\n(CSV / PDF)" as UC14
+  usecase "Gérer les comptes\net le parc" as UC15
+}
+
+Client --> UC0
+Client --> UC1
+Client --> UC2
+Client --> UC3
+
+Tech --> UC0
+Tech --> UC4
+Tech --> UC5
+Tech --> UC9
+Tech --> UC10
+Tech --> UC11
+
+Disp --> UC0
+Disp --> UC4
+Disp --> UC6
+Disp --> UC7
+Disp --> UC8
+Disp --> UC12
+
+Manager --> UC0
+Manager --> UC4
+Manager --> UC13
+
+Admin --> UC0
+Admin --> UC15
+Admin --> UC12
+Admin --> UC13
+Admin --> UC14
+Admin --> UC7
+@enduml

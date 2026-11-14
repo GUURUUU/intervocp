@@ -1,0 +1,79 @@
+@startuml
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+title Architecture — classes clés
+
+package "App Next.js (App Router)" {
+  class "Route Handlers\nsrc/app/api/**" as API
+  class "Server Components\nsrc/app/(app)/**" as Pages
+  class "Client Components\nsrc/components/**" as Components
+}
+
+package "Couche métier\nsrc/server/services" {
+  class RequestsService {
+    +createRequest()
+    +updateStatus()
+    +getDetail()
+  }
+  class PlanningService {
+    +suggestTechnicians()
+    +assignTechnician()
+    +getWeekPlanning()
+  }
+  class StockService {
+    +listParts()
+    +restockPart()
+    +declarePartUsage()
+  }
+  class TrackingService {
+    +recordPing()
+    +getLivePositions()
+    +simulatePings()
+  }
+  class ReportsService {
+    +getDashboardKpis()
+    +buildInterventionsCsv()
+  }
+  class SuggestionScoring <<pure>> {
+    +availabilityScore()
+    +workloadScore()
+    +distanceScore()
+    +totalScore()
+  }
+}
+
+package "Infrastructure\nsrc/lib" {
+  class PrismaClient
+  class EventBus {
+    +publish(type, payload, target)
+    +subscribe(userId)
+  }
+  class Auth {
+    +requireSession(roles)
+  }
+  class Notifications {
+    +notifyUsers(userIds, message)
+  }
+}
+
+API --> RequestsService
+API --> PlanningService
+API --> StockService
+API --> TrackingService
+API --> ReportsService
+PlanningService --> SuggestionScoring
+PlanningService --> EventBus
+PlanningService --> Notifications
+RequestsService --> EventBus
+StockService --> EventBus
+TrackingService --> EventBus
+API --> Auth
+RequestsService --> PrismaClient
+PlanningService --> PrismaClient
+StockService --> PrismaClient
+TrackingService --> PrismaClient
+ReportsService --> PrismaClient
+SSE --> EventBus
+Pages --> Components : props (rôle, données)
+Components --> API : fetch + SSE
+@enduml
