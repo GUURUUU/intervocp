@@ -1,4 +1,5 @@
 import ThreeEquipmentIcon from "@/components/three/ThreeEquipmentIcon";
+import KpiBoard from "@/components/reports/KpiBoard";
 import { auth } from "@/lib/auth";
 import { ROLE_LABELS } from "@/lib/format";
 
@@ -21,7 +22,8 @@ export default async function DashboardPage() {
         <ThreeEquipmentIcon size={84} />
       </div>
 
-      {/* KPI cards are completed in Phase 4 (Reports & Dashboard module). */}
+      {/* Role-scoped KPIs and charts */}
+      <KpiBoard />
     </div>
   );
 }

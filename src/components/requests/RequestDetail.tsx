@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   CalendarDays,
   Camera,
+  FileDown,
   FileUp,
   MapPin,
   MessageSquare,
@@ -140,6 +141,11 @@ export default function RequestDetail({ id, role, userId }: RequestDetailProps) 
   const [ratingComment, setRatingComment] = useState("");
   const [incidentDesc, setIncidentDesc] = useState("");
   const [incidentSeverity, setIncidentSeverity] = useState("MEDIUM");
+  const [catalogParts, setCatalogParts] = useState<
+    { id: string; name: string; reference: string; quantity: number }[]
+  >([]);
+  const [usagePartId, setUsagePartId] = useState("");
+  const [usageQty, setUsageQty] = useState(1);
 
   const load = useCallback(async () => {
     try {
@@ -158,6 +164,20 @@ export default function RequestDetail({ id, role, userId }: RequestDetailProps) 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Parts catalogue for usage declaration (technicians + office).
+  useEffect(() => {
+    if (role !== "TECHNICIAN" && role !== "ADMIN" && role !== "DISPATCHER") return;
+    void (async () => {
+      const res = await fetch("/api/parts", { cache: "no-store" });
+      if (res.ok) {
+        const data = (await res.json()) as {
+          items: { id: string; name: string; reference: string; quantity: number }[];
+        };
+        setCatalogParts(data.items);
+      }
+    })();
+  }, [role]);
 
   const postComment = async () => {
     if (!message.trim()) return;
@@ -238,6 +258,27 @@ export default function RequestDetail({ id, role, userId }: RequestDetailProps) 
     if (res.ok) await load();
   };
 
+  const declareUsage = async () => {
+    if (!usagePartId || usageQty < 1) return;
+    const res = await fetch("/api/part-usages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        interventionId: id,
+        partId: usagePartId,
+        quantity: usageQty,
+      }),
+    });
+    if (res.ok) {
+      setUsagePartId("");
+      setUsageQty(1);
+      await load();
+    } else {
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      setError(body.error ?? "Déclaration impossible");
+    }
+  };
+
   if (error && !data) {
     return (
       <div className="glass-panel rounded-xl p-8 text-center">
@@ -257,6 +298,10 @@ export default function RequestDetail({ id, role, userId }: RequestDetailProps) 
   const canRate = role === "CLIENT" && isRequester && data.status === "CLOTUREE" && !data.satisfactionRating;
   const canDeclareIncident = role === "TECHNICIAN" && data.assignments.some((a) => a.technician.id === userId) || role === "ADMIN" || role === "DISPATCHER";
   const isOffice = role === "ADMIN" || role === "DISPATCHER";
+  const canPdf =
+    isOffice ||
+    isRequester ||
+    data.assignments.some((a) => a.technician.id === userId);
   const nextStatuses = allowedTransitions(data.status, role);
   const partsCost = data.partUsages.reduce((sum, u) => sum + u.quantity * u.part.unitCost, 0);
 
@@ -282,6 +327,13 @@ export default function RequestDetail({ id, role, userId }: RequestDetailProps) 
           <ArrowLeft className="mr-1 inline h-4 w-4" /> Retour aux demandes
         </Link>
         <div className="flex items-center gap-2">
+          {canPdf ? (
+            <Button size="sm" variant="secondary" asChild>
+              <a href={`/api/requests/${id}/report`} target="_blank" rel="noreferrer">
+                <FileDown className="mr-1 h-4 w-4" /> Rapport PDF
+              </a>
+            </Button>
+          ) : null}
           {isOffice ? (
             <Button size="sm" onClick={() => setSuggestOpen(true)}>
               <UserCog className="mr-1 h-4 w-4" /> Affecter / suggérer
@@ -486,6 +538,42 @@ export default function RequestDetail({ id, role, userId }: RequestDetailProps) 
                 ))}
               </ul>
             )}
+            {role !== "CLIENT" && role !== "MANAGER" && catalogParts.length > 0 ? (
+              <div className="mt-3 space-y-2 border-t border-border pt-3">
+                <div className="flex gap-2">
+                  <select
+                    aria-label="Pièce"
+                    value={usagePartId}
+                    onChange={(e) => setUsagePartId(e.target.value)}
+                    className="h-9 min-w-0 flex-1 rounded-md border border-border bg-foreground/5 px-2 text-sm"
+                  >
+                    <option value="">— Choisir une pièce —</option>
+                    {catalogParts.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} (stock : {p.quantity})
+                      </option>
+                    ))}
+                  </select>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={1000}
+                    value={usageQty}
+                    onChange={(e) => setUsageQty(Math.max(1, Number(e.target.value)))}
+                    className="w-20"
+                    aria-label="Quantité"
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={!usagePartId}
+                  onClick={() => void declareUsage()}
+                >
+                  Déclarer l&rsquo;utilisation
+                </Button>
+              </div>
+            ) : null}
           </LiquidGlassCard>
         </div>
 
