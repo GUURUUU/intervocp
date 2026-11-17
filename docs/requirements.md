@@ -19,7 +19,7 @@ exécution → clôture → évaluation → reporting.
 | Acteur | Rôle applicatif | Portée |
 |---|---|---|
 | Employé OCP | `CLIENT` | Créer / suivre / évaluer **ses** demandes |
-| Technicien | `TECHNICIAN` | Demandes visibles, exécution, GPS, pièces, incidents |
+| Technicien | `TECHNICIAN` | Demandes visibles, exécution, pièces, incidents |
 | Répartiteur | `DISPATCHER` | Orchestration : planning, affectations, stock |
 | Responsable | `MANAGER` | Supervision : KPIs, rapports, exports |
 | Administrateur | `ADMIN` | Tout + comptes, référentiels, suppressions |
@@ -32,6 +32,9 @@ exécution → clôture → évaluation → reporting.
 - **RF-02** Redirection automatique vers `/login` si non authentifié.
 - **RF-03** Masquage UI **et** contrôle serveur par rôle (défense en profondeur).
 - **RF-04** Comptes de démonstration pour les 5 profils.
+- **RF-04b** Après connexion, chaque compte est routé automatiquement vers
+  le tableau de bord de son rôle (aucune sélection manuelle), et les pages
+  hors périmètre le renvoient sur ce même tableau de bord.
 
 ### Module 2 — Demandes (RF-05..11)
 
@@ -57,17 +60,19 @@ exécution → clôture → évaluation → reporting.
   navigation précédent/suivant), demandes à planifier listées à part.
 - **RF-13** **Suggestion intelligente** : classement des techniciens pour un
   créneau = 40 % compétence + 25 % disponibilité + 20 % charge + 15 % distance
-  GPS, avec inéligibilité explicite (congé, double-réservation) et raisons
+  géographique, avec inéligibilité explicite (congé, double-réservation) et raisons
   lisibles pour le répartiteur.
 - **RF-14** Affectation manuelle avec contrôle anti double-réservation (409).
 - **RF-15** Fenêtres de disponibilité WORK/LEAVE/BUSY prises en compte.
 
-### Module 4 — Suivi temps réel (RF-16..19)
+### Module 4 — Suivi des interventions (RF-16..19)
 
-- **RF-16** Carte live (Leaflet) des techniciens, marqueurs "glass" avec
-  initiales, halo de précision, rafraîchissement SSE.
-- **RF-17** Partage de position GPS par le technicien (ping horodaté).
-- **RF-18** Simulateur de déplacements (bureau) pour la démo.
+- **RF-16** Circuit visuel par demande : Demande → Planifiée → En cours →
+  Terminée → Clôturée, avec l'horodatage de chaque étape franchie.
+- **RF-17** Vue « où en est chaque demande » : technicien affecté, priorité,
+  statut courant, temps écoulé dans l'étape et filtres par étape.
+- **RF-18** Aucune géolocalisation : le suivi porte sur l'avancement métier,
+  pas sur la position physique des techniciens.
 - **RF-19** Kanban de statuts avec glisser-déposer respectant la machine à
   états et les droits (SSE : rafraîchissement multi-clients instantané).
 
@@ -106,7 +111,7 @@ exécution → clôture → évaluation → reporting.
 | RNF-03 | Ergonomie FR soignée, thème "liquid glass" light cohérent | Design system custom (glass-panel, shaders, 3D) |
 | RNF-04 | Données cohérentes : opérations multi-écritures atomiques | Transactions Prisma + 409 métier |
 | RNF-05 | Maintenabilité : logique métier centralisée, typée, testée | Services + Zod + Vitest (unit) + Playwright (E2E) |
-| RNF-06 | Démo reproductible : seed réaliste + simulateur | `prisma/seed.ts` + simulateur de pings |
+| RNF-06 | Démo reproductible : seed réaliste | `prisma/seed.ts` |
 | RNF-07 | Livrables documentaires complets | `docs/` : exigences, UML (PNG), BDD, architecture, API, tests |
 
 ## 5. Traçabilité implémentation ↔ exigences
@@ -114,9 +119,10 @@ exécution → clôture → évaluation → reporting.
 | Module | Pages / composants | Services | Tests |
 |---|---|---|---|
 | Auth | `/login`, middleware RBAC | `auth/`, `rbac.ts` | E2E login.spec |
+| Tableaux de bord | `/dashboard` — une vue par rôle | `dashboard.ts` | E2E dashboard.spec + vérif. des 5 rôles |
 | Demandes | `/requests`, fiche détail | `requests.ts` | E2E requests.spec |
 | Planning | `/planning`, SuggestDialog | `planning.ts`, `suggestion-scoring.ts` | Vitest scoring + E2E dispatcher |
-| Temps réel | `/tracking`, Kanban, carte | `tracking.ts`, `events.ts` | E2E tracking.spec |
+| Suivi | `/tracking`, circuit + Kanban | `tracking.ts`, `events.ts` | E2E tracking.spec |
 | Stock | `/stock`, fiche détail (pièces) | `stock.ts` | E2E stock.spec |
-| Rapports | `/dashboard`, `/reports`, PDF | `reports.ts` | E2E reports.spec + PDF |
+| Rapports | `/reports`, PDF | `reports.ts` | E2E reports.spec + PDF |
 | Admin | `/admin` | — | E2E dashboard.spec |

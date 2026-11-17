@@ -18,8 +18,8 @@ interface AppShellProps {
 }
 
 /**
- * Dashboard shell: glass sidebar (desktop), gradient top bar with the
- * live notification bell and sign-out. Fully responsive (mobile drawer).
+ * Operations console shell: navy sidebar on desktop, white command bar,
+ * navy mobile drawer. The login page keeps its own visual world.
  */
 export default function AppShell({ user, children }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -32,35 +32,45 @@ export default function AppShell({ user, children }: AppShellProps) {
     router.refresh();
   };
 
+  const initials = user.name
+    .split(" ")
+    .map((part) => part[0] ?? "")
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="app-shell min-h-screen bg-background text-foreground">
       <SidebarNav role={user.role} userName={user.name} />
 
       {/* Mobile drawer */}
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-[#061a2e]/70"
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />
-          <div className="glass-panel absolute inset-y-0 left-0 flex w-64 flex-col rounded-none border-y-0 border-l-0">
-            <div className="flex h-16 items-center justify-between border-b border-border px-4">
-              <div className="flex items-center gap-2">
-                <Wrench className="h-5 w-5 text-emerald-600" aria-hidden="true" />
-                <span className="text-base font-bold text-foreground">IntervOCP</span>
+          <div className="absolute inset-y-0 left-0 flex w-72 flex-col bg-[#0b2a4a]">
+            <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#c7a44a] text-[#0b2a4a]">
+                  <Wrench className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="text-sm font-semibold text-white">IntervOCP</span>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileOpen(false)}
                 aria-label="Fermer le menu"
+                className="text-white/70 hover:bg-white/10 hover:text-white"
               >
-                <X className="h-5 w-5 text-muted-foreground" />
+                <X className="h-5 w-5" />
               </Button>
             </div>
 
-            <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Navigation mobile">
+            <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4" aria-label="Navigation mobile">
               {NAV_ITEMS.filter((item) => item.roles.includes(user.role)).map(
                 (item) => {
                   const active = pathname.startsWith(item.href);
@@ -70,13 +80,13 @@ export default function AppShell({ user, children }: AppShellProps) {
                       key={item.href}
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
-                      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${
+                      className={`flex items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm transition-colors ${
                         active
-                          ? "bg-emerald-500/10 text-emerald-700"
-                          : "text-muted-foreground hover:bg-foreground/5"
+                          ? "border-[#c7a44a] bg-white/10 font-semibold text-white"
+                          : "border-transparent text-white/70 hover:bg-white/5 hover:text-white"
                       }`}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-4 w-4" aria-hidden="true" />
                       {item.label}
                     </Link>
                   );
@@ -84,10 +94,10 @@ export default function AppShell({ user, children }: AppShellProps) {
               )}
             </nav>
 
-            <div className="border-t border-border p-3">
-              <div className="glass-panel-soft rounded-lg px-3 py-2">
-                <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
-                <p className="text-xs text-emerald-700">{ROLE_LABELS[user.role]}</p>
+            <div className="border-t border-white/10 p-3">
+              <div className="rounded-md bg-white/5 px-3 py-2">
+                <p className="truncate text-sm font-medium text-white">{user.name}</p>
+                <p className="text-xs text-[#c7a44a]">{ROLE_LABELS[user.role]}</p>
               </div>
             </div>
           </div>
@@ -95,7 +105,7 @@ export default function AppShell({ user, children }: AppShellProps) {
       ) : null}
 
       <div className="lg:pl-64">
-        <header className="brand-gradient sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border px-4 backdrop-blur-xl sm:px-6">
+        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-white/95 px-4 backdrop-blur sm:px-6">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -106,30 +116,44 @@ export default function AppShell({ user, children }: AppShellProps) {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <h2 className="text-sm font-medium text-foreground/80 sm:text-base">
-              {pageTitle(pathname)}
-            </h2>
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                Service IT · DSI/O/P/K
+              </p>
+              <p className="text-sm font-semibold text-foreground sm:text-base">
+                {pageTitle(pathname)}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
             <NotificationBell />
-            <div className="glass-panel-soft hidden rounded-lg px-3 py-1.5 text-right sm:block">
-              <p className="text-xs font-medium text-foreground">{user.name}</p>
-              <p className="text-[10px] text-emerald-700">{ROLE_LABELS[user.role]}</p>
+            <div className="hidden items-center gap-2.5 border-l border-border pl-3 sm:flex">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0b2a4a] text-[11px] font-bold text-white">
+                {initials || "?"}
+              </span>
+              <span className="leading-tight">
+                <span className="block text-xs font-medium text-foreground">
+                  {user.name}
+                </span>
+                <span className="block text-[11px] text-muted-foreground">
+                  {ROLE_LABELS[user.role]}
+                </span>
+              </span>
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={signOutAndHome}
               aria-label="Se déconnecter"
-              className="text-foreground/80 hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground"
             >
               <LogOut className="h-5 w-5" />
             </Button>
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl p-4 sm:p-6">{children}</main>
+        <main className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6">{children}</main>
       </div>
     </div>
   );

@@ -19,7 +19,10 @@ test.describe("authentification", () => {
     await page.getByRole("button", { name: "Se connecter" }).click();
 
     await page.waitForURL("**/dashboard");
-    await expect(page.getByText("Bonjour Nadia Benali")).toBeVisible();
+    // The admin account is routed straight to its own workspace.
+    await expect(
+      page.getByRole("heading", { level: 1, name: /Console d.administration/ })
+    ).toBeVisible();
   });
 
   test("redirects anonymous users to /login", async ({ page }) => {

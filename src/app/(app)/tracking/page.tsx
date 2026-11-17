@@ -1,12 +1,11 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import ThreeLivePin from "@/components/tracking/ThreeLivePin";
-import TrackingSection from "@/components/tracking/TrackingSection";
+import TrackingFlow from "@/components/tracking/TrackingFlow";
 import KanbanBoard from "@/components/tracking/KanbanBoard";
 
 /**
- * Real-time tracking page: live Leaflet map + status Kanban board.
- * CLIENT role has no tracking access (redirected).
+ * Intervention status tracking: workflow stage per request (no GPS),
+ * plus the drag & drop status board. CLIENT has no tracking access.
  */
 export default async function TrackingPage() {
   const session = await auth();
@@ -16,20 +15,18 @@ export default async function TrackingPage() {
   if (role === "CLIENT") redirect("/dashboard");
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <ThreeLivePin size={52} />
+    <div className="space-y-5">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold text-foreground">
-            Suivi en temps réel
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Carte des techniciens et tableau Kanban — mises à jour instantanées.
+          <h1>Suivi des interventions</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Où en est chaque demande : étape du circuit, technicien affecté et
+            temps écoulé. Les changements de statut arrivent en direct.
           </p>
         </div>
       </div>
 
-      <TrackingSection role={role} />
+      <TrackingFlow />
       <KanbanBoard role={role} />
     </div>
   );

@@ -31,15 +31,12 @@ Rôles : `ADMIN`, `DISPATCHER`, `TECHNICIAN`, `CLIENT`, `MANAGER`.
 | `/api/planning/suggest` | GET | ADMIN, DISPATCHER | Techniciens classés pour un créneau (score + raisons) |
 | `/api/planning/assign` | POST | ADMIN, DISPATCHER | Affectation avec contrôle anti double-réservation (409 si conflit) |
 
-## Suivi temps réel
+## Suivi des interventions
 
 | Endpoint | Méthode | Rôles | Description |
 |---|---|---|---|
-| `/api/pings` | GET | bureau (tous), TECHNICIAN (les siens) | Dernières positions GPS |
-| `/api/pings` | POST | TECHNICIAN, bureau | Enregistre une position, publie `location.ping` |
-| `/api/pings/simulate` | POST | ADMIN, DISPATCHER, MANAGER | Génère des déplacements aléatoires (démo) |
-| `/api/tracking/kanban` | GET | hors CLIENT | Colonnes du kanban de statuts (scopé) |
-| `/api/stream` | GET | tous | **SSE** : `intervention.status`, `intervention.assigned`, `comment.created`, `incident.created`, `location.ping`, `stock.low`, `notification`, `heartbeat` |
+| `/api/tracking/kanban` | GET | hors CLIENT | Demandes scopées avec statut, priorité, affectation et horodatages d'étapes (création, planification, début, fin, clôture) |
+| `/api/stream` | GET | tous | **SSE** : `intervention.status`, `intervention.assigned`, `comment.created`, `incident.created`, `stock.low`, `notification`, `heartbeat` |
 
 ## Stock
 

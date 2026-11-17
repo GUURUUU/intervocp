@@ -3,7 +3,7 @@ import {
   ClipboardList,
   FileText,
   LayoutDashboard,
-  MapPinned,
+  ListChecks,
   Package,
   Settings,
 } from "lucide-react";
@@ -39,8 +39,8 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/tracking",
-    label: "Suivi temps réel",
-    icon: MapPinned,
+    label: "Suivi des interventions",
+    icon: ListChecks,
     roles: ["ADMIN", "DISPATCHER", "TECHNICIAN", "MANAGER"],
   },
   {
@@ -67,7 +67,7 @@ export function pageTitle(pathname: string): string {
   if (pathname.startsWith("/dashboard")) return "Tableau de bord";
   if (pathname.startsWith("/requests")) return "Demandes d'intervention";
   if (pathname.startsWith("/planning")) return "Planification & affectation";
-  if (pathname.startsWith("/tracking")) return "Suivi en temps réel";
+  if (pathname.startsWith("/tracking")) return "Suivi des interventions";
   if (pathname.startsWith("/stock")) return "Gestion des stocks";
   if (pathname.startsWith("/reports")) return "Rapports";
   if (pathname.startsWith("/admin")) return "Administration";

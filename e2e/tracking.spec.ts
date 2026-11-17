@@ -2,15 +2,14 @@ import { expect, test } from "@playwright/test";
 
 test.use({ storageState: "e2e/.auth/admin.json" });
 
-/** Real-time tracking: live map + intervention kanban. */
-test.describe("suivi temps réel", () => {
-  test("renders the leaflet map with technician markers", async ({ page }) => {
+/** Intervention status tracking: workflow stages + kanban, no GPS. */
+test.describe("suivi des interventions", () => {
+  test("shows the workflow stages for each intervention", async ({ page }) => {
     await page.goto("/tracking");
 
-    await expect(page.locator(".leaflet-container")).toBeVisible();
-    await expect(page.locator(".map-tech-marker").first()).toBeVisible({
-      timeout: 20_000,
-    });
+    await expect(page.getByRole("heading", { name: "Suivi des interventions" })).toBeVisible();
+    await expect(page.getByText("À planifier").first()).toBeVisible();
+    await expect(page.getByText("Planifiée").first()).toBeVisible();
   });
 
   test("renders the six kanban columns", async ({ page }) => {
@@ -22,8 +21,13 @@ test.describe("suivi temps réel", () => {
     await expect(page.getByText("Clôturée").first()).toBeVisible();
   });
 
-  test("shows the position simulator for office roles", async ({ page }) => {
+  test("filters the tracking list by stage", async ({ page }) => {
     await page.goto("/tracking");
-    await expect(page.getByText(/Simuler/).first()).toBeVisible();
+
+    await page.getByRole("tab", { name: "Terminées" }).click();
+    await expect(page.getByRole("tab", { name: "Terminées" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
   });
 });

@@ -52,15 +52,15 @@ erDiagram
 | `Intervention` | Cœur du système | `reference` unique `INT-YYYY-NNNN`, `title`, `type`, `priority`, `status`, `plannedStart/End`, `actualStart/End`, `closedAt`, `satisfactionRating/Comment`, `latitude/longitude` |
 | `Assignment` | Affectation technicien | unique `(interventionId, technicianId)`, `assignedBy`, `assignedAt` |
 | `StatusHistory` | Journal des changements de statut | `from`, `to`, `comment`, `changedBy`, `changedAt` |
-| `Comment` | Fil de discussion par intervention | `authorId`, `content`, `createdAt` |
-| `Attachment` | Photos / PDF joints | `fileName`, `kind` (PHOTO/DOCUMENT), `uploadedByUserId` |
+| `Comment` | Fil de discussion par intervention | `authorId`, `message`, `createdAt` |
+| `Attachment` | Photos / PDF joints | `fileName`, `kind` (PHOTO/DOCUMENT), `uploadedBy`, `filePath` |
 | `Incident` | Blocage signalé par le technicien | `severity` (LOW/MEDIUM/HIGH), `description`, `reportedAt` |
 | `Part` | Catalogue de pièces | `reference` unique, `quantity`, `minThreshold`, `unitCost`, `location` |
 | `PartUsage` | Consommation par intervention | `interventionId`, `partId`, `quantity`, `usedBy`, `usedAt` |
 | `StockMovement` | Journal des entrées/sorties | `partId`, `delta` (±), `reason` (RESTOCK/USAGE/ADJUSTMENT), `createdAt` |
-| `LocationPing` | Positions GPS horodatées | `technicianId`, `latitude`, `longitude`, `timestamp`, `batteryLevel?` |
+| `LocationPing` | Positions GPS horodatées (scoring de proximité) | `technicianId`, `latitude`, `longitude`, `timestamp` |
 | `Notification` | Messages in-app | `userId`, `message`, `read`, `createdAt` |
-| `Report` | Métadonnée du rapport PDF | `interventionId` unique, `generatedAt`, `filePath` |
+| `Report` | Métadonnée du rapport PDF | `interventionId`, `generatedAt`, `filePath` |
 
 ## Énumérations
 

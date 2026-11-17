@@ -205,7 +205,12 @@ export interface KanbanItem {
   priority: string;
   requester: { name: string };
   assignments: { technician: { id: string; name: string } }[];
+  createdAt: string;
   plannedStart: string | null;
+  plannedEnd: string | null;
+  actualStart: string | null;
+  actualEnd: string | null;
+  closedAt: string | null;
 }
 
 /**
@@ -246,7 +251,12 @@ export async function getKanbanRequests(user: TrackingUser): Promise<{
       title: true,
       status: true,
       priority: true,
+      createdAt: true,
       plannedStart: true,
+      plannedEnd: true,
+      actualStart: true,
+      actualEnd: true,
+      closedAt: true,
       requester: { select: { name: true } },
       assignments: {
         select: { technician: { select: { id: true, name: true } } },
@@ -263,7 +273,12 @@ export async function getKanbanRequests(user: TrackingUser): Promise<{
       priority: i.priority,
       requester: i.requester,
       assignments: i.assignments,
+      createdAt: i.createdAt.toISOString(),
       plannedStart: i.plannedStart ? i.plannedStart.toISOString() : null,
+      plannedEnd: i.plannedEnd ? i.plannedEnd.toISOString() : null,
+      actualStart: i.actualStart ? i.actualStart.toISOString() : null,
+      actualEnd: i.actualEnd ? i.actualEnd.toISOString() : null,
+      closedAt: i.closedAt ? i.closedAt.toISOString() : null,
     })),
   };
 }

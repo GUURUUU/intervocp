@@ -3,6 +3,11 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import {
+  checkLoginRateLimit,
+  clearLoginFailures,
+  registerLoginFailure,
+} from "./rate-limit";
 import { authConfig } from "./config";
 
 const credentialsSchema = z.object({
@@ -24,14 +29,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!parsed.success) return null;
 
         const { email, password } = parsed.data;
-        const user = await prisma.user.findUnique({
-          where: { email: email.toLowerCase() },
-        });
+        const key = email.toLowerCase();
 
-        if (!user || !user.active) return null;
+        // Brute-force protection: 5 failures in 15 min lock the account.
+        if (!checkLoginRateLimit(key).allowed) return null;
+
+        const user = await prisma.user.findUnique({ where: { email: key } });
+
+        if (!user || !user.active) {
+          registerLoginFailure(key);
+          return null;
+        }
 
         const valid = bcrypt.compareSync(password, user.passwordHash);
-        if (!valid) return null;
+        if (!valid) {
+          registerLoginFailure(key);
+          return null;
+        }
+
+        clearLoginFailures(key);
 
         return {
           id: user.id,

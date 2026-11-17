@@ -403,6 +403,10 @@ async function main() {
 
   // --- Parts (60) --------------------------------------------------------------
   const partIds: string[] = [];
+  // Available stock per part, kept in sync with the seeded usages so the demo
+  // data never goes negative.
+  const partStock = new Map<string, number>();
+  const partThresholds = new Map<string, number>();
   for (let i = 0; i < PART_NAMES.length; i++) {
     const p = PART_NAMES[i];
     const initialQty = randInt(2, 60);
@@ -417,6 +421,8 @@ async function main() {
       },
     });
     partIds.push(part.id);
+    partStock.set(part.id, initialQty);
+    partThresholds.set(part.id, part.minThreshold);
     await prisma.stockMovement.create({
       data: { partId: part.id, delta: initialQty, reason: "SEED" },
     });
@@ -620,6 +626,10 @@ async function main() {
         if (usedPartIds.has(partId)) continue;
         usedPartIds.add(partId);
         const qty = randInt(1, 4);
+        const available = partStock.get(partId) ?? 0;
+        // Keep the part above its reorder threshold so demo stock stays realistic.
+        if (available - qty < (partThresholds.get(partId) ?? 0)) continue;
+        partStock.set(partId, available - qty);
         const techEmail = pick(techEmails);
         await prisma.partUsage.create({
           data: {
@@ -659,6 +669,21 @@ async function main() {
     }
   }
   console.log(`  ✓ ${N_INTERVENTIONS} interventions with history, assignments, usage`);
+
+  // --- Deliberate low-stock alerts (distinct quantities, never negative) ------
+  const alertParts = [...partStock.keys()].sort(() => rnd() - 0.5).slice(0, 4);
+  for (const partId of alertParts) {
+    const threshold = partThresholds.get(partId) ?? 5;
+    const current = partStock.get(partId) ?? 0;
+    const target = randInt(0, Math.max(0, threshold - 1));
+    if (target >= current) continue;
+    await prisma.part.update({ where: { id: partId }, data: { quantity: target } });
+    await prisma.stockMovement.create({
+      data: { partId, delta: target - current, reason: "ADJUSTMENT" },
+    });
+    partStock.set(partId, target);
+  }
+  console.log(`  ✓ ${alertParts.length} low-stock alerts`);
 
   // --- Location pings (recent, around the site) --------------------------------
   for (const email of techEmails) {

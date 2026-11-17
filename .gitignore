@@ -50,3 +50,6 @@ lint-report.json
 e2e/.auth/
 test-results/
 playwright-report/
+
+# Agent skills installed locally (not project source)
+.agents/

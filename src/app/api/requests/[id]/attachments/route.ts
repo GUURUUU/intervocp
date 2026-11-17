@@ -9,7 +9,7 @@ import { publish } from "@/lib/events";
 export const runtime = "nodejs";
 
 /** Directory where uploaded files are stored (git-ignored). */
-export const UPLOAD_DIR = path.join(process.cwd(), "uploads");
+const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_MIME = [

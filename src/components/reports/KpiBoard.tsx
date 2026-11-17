@@ -83,14 +83,16 @@ function StatCard({
   hint?: string;
 }) {
   return (
-    <div className="glass-panel rounded-2xl border border-border p-4">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground/5 text-emerald-700">
+    <div className="glass-panel rounded-xl p-4">
+      <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0b2a4a]/8 text-[#0b2a4a]">
           {icon}
         </span>
         {label}
       </div>
-      <p className="mt-2 text-2xl font-bold text-foreground">{value}</p>
+      <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">
+        {value}
+      </p>
       {hint ? <p className="text-[11px] text-muted-foreground/80">{hint}</p> : null}
     </div>
   );
@@ -104,7 +106,7 @@ function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="glass-panel rounded-2xl border border-border p-4">
+    <div className="glass-panel rounded-xl p-4">
       <p className="mb-3 text-sm font-semibold text-foreground">{title}</p>
       {children}
     </div>
@@ -142,11 +144,11 @@ export default function KpiBoard({ canExport = false }: { canExport?: boolean })
 
   if (!kpis) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="h-24 animate-pulse rounded-2xl border border-border bg-foreground/5"
+            className="h-24 animate-pulse rounded-xl border border-border bg-foreground/5"
           />
         ))}
       </div>
@@ -344,7 +346,7 @@ export default function KpiBoard({ canExport = false }: { canExport?: boolean })
 
       {/* Technician utilization */}
       {kpis.technicianUtilization.length > 0 ? (
-        <div className="glass-panel rounded-2xl border border-border p-4">
+        <div className="glass-panel rounded-xl p-4">
           <p className="mb-3 text-sm font-semibold text-foreground">
             Charge des techniciens
           </p>

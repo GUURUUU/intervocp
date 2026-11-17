@@ -10,7 +10,7 @@ stage impose la simplicité opérationnelle.
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                      Navigateur (PWA-ready)                   │
-│  React 19 · Tailwind 4 · Leaflet · Recharts · react-three-fiber│
+│  React 19 · Tailwind 4 · Recharts                              │
 └───────────────▲──────────────────────────────▲───────────────┘
         fetch/REST │                       SSE │
 ┌───────────────┴──────────────────────────────┴───────────────┐
@@ -37,12 +37,11 @@ stage impose la simplicité opérationnelle.
 | Framework | Next.js 15 + React 19 | SSR/RSC, API intégrée, écosystème mature |
 | Langage | TypeScript strict | Fiabilité, autocomplétion Prisma |
 | UI | Tailwind CSS 4 + shadcn/ui (Radix) | Rapide, accessible, thème glass light custom |
-| 3D / design | three.js + @react-three/fiber + @shadergradient/react | Identité visuelle « liquid glass » (icône équipement 3D, fond shader) |
+| 3D / design | three.js + @shadergradient/react | Identité visuelle « liquid glass » (fond shader animé) |
 | ORM | Prisma 6 | Typage end-to-end, migrations, SQL brut possible (`$queryRaw`) |
 | BDD | PostgreSQL 16 | `DISTINCT ON`, `contains insensitive`, JSON-ready |
 | Auth | Auth.js v5 (next-auth beta) credentials + JWT httpOnly | Simple, RBAC côté serveur |
 | Temps réel | SSE (EventSource) + event bus en mémoire | Suffisant en mono-instance, zéro dépendance externe |
-| Cartes | Leaflet + react-leaflet (tiles OSM) | Léger, open source |
 | Graphiques | Recharts 3 | Charts déclaratifs React 19 |
 | PDF | @react-pdf/renderer (`renderToBuffer`) | Génération serveur sans navigateur |
 | Tests | Vitest 5 (unit) + Playwright (E2E) | Rapide / fidèle au navigateur réel |
@@ -53,10 +52,10 @@ stage impose la simplicité opérationnelle.
 src/
 ├── app/
 │   ├── (app)/               # pages authentifiées (shell + sidebar)
-│   │   ├── dashboard/       # KPIs Recharts + gradient shader
+│   │   ├── dashboard/       # tableau de bord choisi selon le rôle
 │   │   ├── requests/        # liste + fiche détail dynamique
 │   │   ├── planning/        # grille hebdomadaire + DnD
-│   │   ├── tracking/        # carte live + kanban statuts
+│   │   ├── tracking/        # circuit d'étapes + kanban statuts
 │   │   ├── stock/           # catalogue + réapprovisionnement
 │   │   ├── reports/         # rapports + export CSV
 │   │   └── admin/           # vue d'ensemble comptes/parc
@@ -66,7 +65,7 @@ src/
 ├── components/              # composants client (glass UI)
 ├── hooks/                   # use-event-stream (SSE)
 ├── lib/                     # prisma, auth, events, format, geo…
-├── server/services/         # logique métier (requests, planning,
+├── server/services/         # logique métier (dashboard, requests, planning,
 │                            # stock, tracking, reports, suggestion-scoring)
 └── validation/              # schémas Zod par domaine
 ```
@@ -82,12 +81,18 @@ src/
    rôles internes → global).
 3. **Temps réel ciblé** : l'event bus publie `intervention.status`,
    `intervention.assigned`, `comment.created`, `incident.created`,
-   `location.ping`, `stock.low`… avec une liste de destinataires (rôles +
-   users). Le hook `useEventStream` refetch automatiquement.
-4. **Transactions Prisma** partout où plusieurs écritures doivent être
+   `stock.low`… avec une liste de destinataires (rôles + users). Le hook
+   `useEventStream` refetch automatiquement.
+4. **Tableau de bord par rôle** : `dashboard/page.tsx` lit la session et
+   délègue au service `dashboard.ts`, qui expose une agrégation par métier
+   (`getAdminDashboard`, `getDispatcherDashboard`, `getTechnicianDashboard`,
+   `getClientDashboard`, `getManagerDashboard`). Chaque agrégation applique
+   le même périmètre que les listes (client → ses demandes, technicien →
+   affectations, rôles internes → global).
+5. **Transactions Prisma** partout où plusieurs écritures doivent être
    atomiques : référence annuelle, affectation + historique, consommation
    pièce + décrément stock + mouvement.
-5. **Scoring pur** : le module `suggestion-scoring.ts` ne fait aucune I/O —
+6. **Scoring pur** : le module `suggestion-scoring.ts` ne fait aucune I/O —
    il est couvert par des tests unitaires Vitest.
 
 ## Sécurité
@@ -100,6 +105,6 @@ src/
 
 ## Limites connues (volontaires, contexte démo)
 
-- L'event bus et le simulateur de pings vivent en mémoire : mono-instance.
-- Tiles OSM et CDN kroki : nécessitent Internet.
+- L'event bus vit en mémoire : mono-instance.
+- Le CDN kroki (diagrammes UML) nécessite Internet.
 - Pas de files d'attente ni de cache distribué (inutile à cette échelle).

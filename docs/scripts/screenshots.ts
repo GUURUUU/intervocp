@@ -78,11 +78,17 @@ async function main() {
       await context.close();
     }
 
-    // DISPATCHER: requests + suggestion dialog open.
+    // DISPATCHER: role dashboard, then requests + suggestion dialog open.
     {
       const { context, page } = await loginAs(browser, ACCOUNTS.dispatcher);
-      await page.goto(`${BASE_URL}/requests`);
-      await page.locator("a[href*='/requests/']").first().click();
+      await shoot(page, "dispatcher-dashboard");
+      // Pick a request through the API so the shot does not depend on the
+      // list finishing its client-side fetch.
+      const listResponse = await page.request.get(
+        `${BASE_URL}/api/requests?page=1&pageSize=1`
+      );
+      const list = (await listResponse.json()) as { items: { id: string }[] };
+      await page.goto(`${BASE_URL}/requests/${list.items[0].id}`);
       await page.waitForURL(/\/requests\/[a-z0-9]+/i);
       await page.getByRole("button", { name: /Affecter \/ suggérer/ }).click();
       await page.getByText("Suggestion de technicien").waitFor();
@@ -106,9 +112,10 @@ async function main() {
       await context.close();
     }
 
-    // MANAGER: reports.
+    // MANAGER: role dashboard + reports.
     {
       const { context, page } = await loginAs(browser, ACCOUNTS.manager);
+      await shoot(page, "manager-dashboard");
       await page.goto(`${BASE_URL}/reports`);
       await shoot(page, "manager-reports");
       await context.close();
